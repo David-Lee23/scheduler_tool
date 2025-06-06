@@ -1,0 +1,32 @@
+"HCR#               As Of Date         Contract Origin (and Admin Official)                    Contract Destination
+0219R                                LOG BOSTON                                              SPRINGFIELD NDC",,,,,,,,,,,,,,,,,,,,
+Supplier Name                        Supplier Address                                        Supplier Phone              Supplier Email,,,,,,,,,,,,,,,,,,,,
+"DDA TRANSPORT INC                    11 NAVIGATOR RD, LONDONDERRY, NH 03053-4403             (603) 647-4838              dwayne@ddaservicesinc.com",,,,,,,,,,,,,,,,,,,,
+Estimated Annual Schedule,,,,,,Miles:,"942,771.9",,,,,,,,,,,,,
+Estimated Annual Schedule,,,,,,Hours:,"30,185.25",,,,,,,,,,,,,
+Trip,,Stop,Nass,Code,Facility,,,Arrive Time,,,,,Load/,,Depart Time,,Vehicle Freq,,Freq Days,Eff. Date  Exp. Date
+ID,,#,,,,,,,,,,,Unload,,,,,,,
+301,1,,021,,LOG BOSTON,,,,,,1:45:00,ET,30,min,2:15:00,ET,53FT,R1,307.0,01/11/2025 12/31/2026
+301,2,,015,,CENTRAL,,,,,,3:15:00,ET,30,min,3:45:00,ET,,,,
+301,3,,01Z,,SPRINGFIELD,,,NDC,,,4:54:59,ET,15,min,5:10:00,ET,,,,
+,,,Trip,Miles,Trip Hrs,,,,Drive,Time,,,,,,,,,,
+,,,92.6,,3.42,,,,2.17,,,,,,,,,,,
+302,1,,01Z,,SPRINGFIELD,,,NDC,,,5:10:00,ET,15,min,5:24:59,ET,53FT,R1,307.0,01/11/2025 12/31/2026
+302,2,,021,,LOG BOSTON,,,,,,7:14:59,ET,30,min,7:45:00,ET,,,,
+,,,Trip,Miles,Trip Hrs,,,,Drive,Time,,,,,,,,,,
+,,,85.1,,2.58,,,,1.83,,,,,,,,,,,
+,1,,021,,LOG BOSTON,,,,,,1:59:59,ET,30,min,2:30:00,ET,53FT,L1,303.0,01/11/2025 03/21/2025
+,2,,015,,CENTRAL,,,,,,3:29:59,ET,30,min,4:00:00,ET,,,,
+,3,,060,,HARTFORD,,,,,,5:30:00,ET,15,min,5:44:59,ET,,,,
+,,,Trip,Miles,Trip Hrs,,,,Drive,Time,,,,,,,,,,
+,,,109.3,,3.75,,,,2.50,,,,,,,,,,,
+304,1,,060,,HARTFORD,,,,,,5:44:59,ET,30,min,6:15:00,ET,53FT,L1,303.0,01/11/2025 12/31/2026
+304,2,,021,,LOG BOSTON,,,,,,8:30:00,ET,15,min,8:44:59,ET,,,,
+,,,Trip,Miles,Trip Hrs,,,,Drive,Time,,,,,,,,,,
+,,,101.7,,3.00,,,,2.25,,,,,,,,,,,
+305,1,,021,,LOG BOSTON,,,,,,2:44:59,ET,30,min,3:15:00,ET,53FT,R1,307.0,01/11/2025 12/31/2026
+305,2,,015,,CENTRAL,,,,,,4:14:59,ET,30,min,4:45:00,ET,,,,
+305,3,,01Z,,SPRINGFIELD,,,NDC,,,5:55:00,ET,15,min,6:09:59,ET,,,,
+,,,Trip,Miles,Trip Hrs,,,,Drive,Time,,,,,,,,,,
+,,,92.6,,3.42,,,,2.17,,,,,,,,,,,
+306,1,,01Z,,SPRINGFIELD,,,NDC,,,6:09:59,ET,15,min,6:24:59,ET,53FT,R1,307.0,01/11/2025 12/31/2026
