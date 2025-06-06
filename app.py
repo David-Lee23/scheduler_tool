@@ -1,8 +1,8 @@
 from pathlib import Path
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify, abort, render_template
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{Path(__file__).with_name('scheduler.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -25,6 +25,11 @@ class Schedule(db.Model):
     trip_miles = db.Column(db.Float, nullable=False)
     trip_hours = db.Column(db.Float, nullable=False)
     drive_time = db.Column(db.Float, nullable=False)
+
+@app.route('/')
+def index():
+    """Serve the React front-end."""
+    return render_template('index.html')
 
 @app.route('/contracts')
 def get_contracts():
