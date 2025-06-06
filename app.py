@@ -26,6 +26,16 @@ class Schedule(db.Model):
     trip_hours = db.Column(db.Float, nullable=False)
     drive_time = db.Column(db.Float, nullable=False)
 
+class OptimizedShift(db.Model):
+    __tablename__ = 'optimized_shifts'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    contract_id = db.Column(db.String, nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    shift_id = db.Column(db.Integer, nullable=False)
+    stop_sequence = db.Column(db.String, nullable=False)
+    total_miles = db.Column(db.Float, nullable=False)
+    total_hours = db.Column(db.Float, nullable=False)
+
 @app.route('/')
 def index():
     """Serve the React front-end."""

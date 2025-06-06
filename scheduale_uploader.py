@@ -190,3 +190,10 @@ if __name__ == "__main__":
     print(f"Looking for CSV files in: {folder_path.resolve()}")
     process_schedules(folder_path)
     print("Database upload process complete.")
+
+    # After importing schedules, build optimized shifts
+    try:
+        import route_optimizer
+        route_optimizer.populate_optimized_shifts()
+    except Exception as e:
+        print(f"Failed to populate optimized shifts: {e}")
