@@ -11,7 +11,6 @@ from sqlalchemy import create_engine
 import csv
 
 folder_path = Path(__file__).parent / "csvs"
-csv_files = list(folder_path.glob("*.csv"))
 
 class Base(DeclarativeBase):
     pass
@@ -64,6 +63,8 @@ def process_schedules(folder_path):
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()
+
+    csv_files = list(folder_path.glob("*.csv"))
 
     for file_path in csv_files:
         print(f"📄 Processing {file_path.name}")
@@ -160,6 +161,25 @@ def process_schedules(folder_path):
                     drive_time=0.0
                 )
                 current_trip_stops.append(v)
+
+        print(f"✅ Finished processing {file_path.name}")
+            # After processing all rows in the file, there may still be
+            # buffered stops (e.g., when a trip is missing a summary row).
+        if current_trip_stops:
+            for stop in current_trip_stops:
+                session.merge(stop)
+
+            try:
+                session.commit()
+                trip_id_for_print = current_trip_stops[0].trip_id
+                print(
+                    f"  -> Final commit Trip ID {trip_id_for_print} with {len(current_trip_stops)} stops."
+                )
+            except Exception as e:
+                print(
+                    f"  -> ERROR committing final Trip ID {current_trip_stops[0].trip_id}: {e}"
+                )
+                session.rollback()
 
         print(f"✅ Finished processing {file_path.name}")
 
