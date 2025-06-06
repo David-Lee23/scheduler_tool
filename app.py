@@ -26,6 +26,17 @@ class Schedule(db.Model):
     trip_hours = db.Column(db.Float, nullable=False)
     drive_time = db.Column(db.Float, nullable=False)
 
+class OptimizedShift(db.Model):
+    __tablename__ = 'optimized_shifts'
+    id = db.Column(db.Integer, primary_key=True)
+    shift_date = db.Column(db.String, nullable=False)
+    shift_id = db.Column(db.String, nullable=False)
+    stop_number = db.Column(db.Integer, nullable=False)
+    nass_code = db.Column(db.String, nullable=False)
+    facility = db.Column(db.String, nullable=False)
+    arrive_time = db.Column(db.String, nullable=False)
+    depart_time = db.Column(db.String, nullable=False)
+
 @app.route('/')
 def index():
     """Serve the React front-end."""
@@ -67,6 +78,30 @@ def get_trip_details(contract_id, trip_id):
             'drive_time': s.drive_time,
         }
         for s in stops
+    ]
+    return jsonify(result)
+
+@app.route('/optimized-shifts/<date>')
+def get_optimized_shifts(date):
+    shifts = OptimizedShift.query.filter_by(shift_date=date).\
+        order_by(OptimizedShift.shift_id, OptimizedShift.stop_number).all()
+    if not shifts:
+        abort(404)
+    grouped = {}
+    for s in shifts:
+        grouped.setdefault(s.shift_id, []).append({
+            'stop_number': s.stop_number,
+            'nass_code': s.nass_code,
+            'facility': s.facility,
+            'arrive_time': s.arrive_time,
+            'depart_time': s.depart_time,
+        })
+    result = [
+        {
+            'shift_id': shift_id,
+            'stops': stops
+        }
+        for shift_id, stops in grouped.items()
     ]
     return jsonify(result)
 
