@@ -4,6 +4,8 @@ function ScheduleApp() {
   const [trips, setTrips] = React.useState([]);
   const [selectedTrip, setSelectedTrip] = React.useState('');
   const [tripDetails, setTripDetails] = React.useState([]);
+  const [selectedDate, setSelectedDate] = React.useState('');
+  const [shifts, setShifts] = React.useState([]);
 
   React.useEffect(() => {
     fetch('/contracts')
@@ -40,6 +42,20 @@ function ScheduleApp() {
       setTripDetails([]);
     }
   }, [selectedContract, selectedTrip]);
+
+  React.useEffect(() => {
+    if (selectedDate) {
+      fetch(`/optimized-shifts/${selectedDate}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch shifts');
+          return res.json();
+        })
+        .then(setShifts)
+        .catch(() => setShifts([]));
+    } else {
+      setShifts([]);
+    }
+  }, [selectedDate]);
 
   return (
     <div>
@@ -107,6 +123,34 @@ function ScheduleApp() {
           </tbody>
         </table>
       )}
+
+      <hr />
+      <h2>Optimized Shifts</h2>
+      <label>
+        Date:
+        <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
+      </label>
+
+      {shifts.map((shift, sIdx) => (
+        <div key={shift.id || shift.shift_id || sIdx} style={{ marginTop: '20px' }}>
+          <h3>{shift.shift_id || shift.id || `Shift ${sIdx + 1}`}</h3>
+          {Array.isArray(shift.stops) && shift.stops.length > 0 && (() => {
+            const cols = Object.keys(shift.stops[0]);
+            return (
+              <table>
+                <thead>
+                  <tr>{cols.map(c => <th key={c}>{c}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {shift.stops.map((stop, idx) => (
+                    <tr key={idx}>{cols.map(c => <td key={c}>{stop[c]}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+          })()}
+        </div>
+      ))}
     </div>
   );
 }
