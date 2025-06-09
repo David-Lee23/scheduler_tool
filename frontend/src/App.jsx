@@ -20,7 +20,9 @@ function App() {
       <h1 className="text-2xl font-bold mb-4">Trips</h1>
       <ul className="list-disc pl-5">
         {trips.map(trip => (
-          <li key={trip.id}>{trip.contract_id} - {trip.start_location} ➡️ {trip.end_location}</li>
+          <li key={trip.id}>
+            {trip.contract_id} - {trip.start_location} ➡️ {trip.end_location} ({trip.trip_date})
+          </li>
         ))}
       </ul>
     </div>

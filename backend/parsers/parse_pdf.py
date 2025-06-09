@@ -1,7 +1,4 @@
-"""Stub parser that converts a contract PDF into Trip objects.
-
-Replace `parse_pdf` with your real parsing logic.
-"""
+"""Stub parser that converts a contract PDF into Trip objects."""
 from pathlib import Path
 from typing import List
 from models.trip import Trip
@@ -9,9 +6,7 @@ import uuid
 import datetime as dt
 
 def parse_pdf(pdf_path: str) -> List[Trip]:
-    # TODO: Implement real PDF parsing here.
     print(f"[parse_pdf] Parsing {pdf_path} (stub).")
-    # Example stub trip
     trip = Trip(
         id=str(uuid.uuid4()),
         contract_id="CONTRACT_STUB",
