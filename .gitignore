@@ -29,3 +29,8 @@ build/
 
 # .env files
 .env # Ignore all .env files
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
