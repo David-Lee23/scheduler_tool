@@ -51,6 +51,13 @@ class SimpleTruckingDB:
             effective_date TEXT,
             expiration_date TEXT,
             raw_data TEXT,
+            contract_hcr_number TEXT,
+            contract_destination TEXT,
+            contract_supplier_name TEXT,
+            contract_supplier_phone TEXT,
+            contract_supplier_email TEXT,
+            contract_estimated_annual_miles TEXT,
+            contract_estimated_annual_hours TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
@@ -60,7 +67,8 @@ class SimpleTruckingDB:
             "CREATE INDEX IF NOT EXISTS idx_trip_id ON schedule(trip_id);",
             "CREATE INDEX IF NOT EXISTS idx_facility ON schedule(facility);",
             "CREATE INDEX IF NOT EXISTS idx_arrive_time ON schedule(arrive_time);",
-            "CREATE INDEX IF NOT EXISTS idx_vehicle_id ON schedule(vehicle_id);"
+            "CREATE INDEX IF NOT EXISTS idx_vehicle_id ON schedule(vehicle_id);",
+            "CREATE INDEX IF NOT EXISTS idx_contract_hcr_number ON schedule(contract_hcr_number);"
         ]
         
         try:
@@ -75,6 +83,43 @@ class SimpleTruckingDB:
             
         except Exception as e:
             logger.error(f"Failed to create schema: {e}")
+            raise
+    
+    def migrate_schema(self):
+        """Add missing columns to existing table if needed."""
+        try:
+            cursor = self.conn.cursor()
+            
+            # Get existing columns
+            cursor.execute("PRAGMA table_info(schedule)")
+            existing_columns = [row[1] for row in cursor.fetchall()]
+            
+            # List of new columns to add
+            new_columns = [
+                ('contract_hcr_number', 'TEXT'),
+                ('contract_destination', 'TEXT'),
+                ('contract_supplier_name', 'TEXT'),
+                ('contract_supplier_phone', 'TEXT'),
+                ('contract_supplier_email', 'TEXT'),
+                ('contract_estimated_annual_miles', 'TEXT'),
+                ('contract_estimated_annual_hours', 'TEXT')
+            ]
+            
+            # Add missing columns
+            for column_name, column_type in new_columns:
+                if column_name not in existing_columns:
+                    logger.info(f"Adding column: {column_name}")
+                    cursor.execute(f"ALTER TABLE schedule ADD COLUMN {column_name} {column_type}")
+            
+            # Add missing index
+            if 'contract_hcr_number' not in existing_columns:
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_contract_hcr_number ON schedule(contract_hcr_number);")
+            
+            self.conn.commit()
+            logger.info("Database schema migration completed")
+            
+        except Exception as e:
+            logger.error(f"Failed to migrate schema: {e}")
             raise
     
     def load_csv_data(self, csv_file_path):
@@ -101,7 +146,14 @@ class SimpleTruckingDB:
                         str(row['frequency']) if pd.notna(row['frequency']) else None,
                         str(row['effective_date']) if pd.notna(row['effective_date']) else None,
                         str(row['expiration_date']) if pd.notna(row['expiration_date']) else None,
-                        str(row['raw_data']) if pd.notna(row['raw_data']) else None
+                        str(row['raw_data']) if pd.notna(row['raw_data']) else None,
+                        str(row['contract_hcr_number']) if pd.notna(row['contract_hcr_number']) else None,
+                        str(row['contract_destination']) if pd.notna(row['contract_destination']) else None,
+                        str(row['contract_supplier_name']) if pd.notna(row['contract_supplier_name']) else None,
+                        str(row['contract_supplier_phone']) if pd.notna(row['contract_supplier_phone']) else None,
+                        str(row['contract_supplier_email']) if pd.notna(row['contract_supplier_email']) else None,
+                        str(row['contract_estimated_annual_miles']) if pd.notna(row['contract_estimated_annual_miles']) else None,
+                        str(row['contract_estimated_annual_hours']) if pd.notna(row['contract_estimated_annual_hours']) else None
                     )
                     records.append(record)
                 except Exception as e:
@@ -113,8 +165,11 @@ class SimpleTruckingDB:
             INSERT OR REPLACE INTO schedule 
             (trip_id, stop_number, nass_code, facility, arrive_time, depart_time, 
              load_unload_duration, vehicle_type, vehicle_id, frequency, 
-             effective_date, expiration_date, raw_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             effective_date, expiration_date, raw_data, contract_hcr_number, 
+             contract_destination, contract_supplier_name, contract_supplier_phone, 
+             contract_supplier_email, contract_estimated_annual_miles, 
+             contract_estimated_annual_hours)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             
             cursor = self.conn.cursor()
@@ -176,18 +231,28 @@ def main():
         logger.error(f"CSV file not found: {csv_file}")
         sys.exit(1)
     
-    # Remove existing database to start fresh
-    if os.path.exists(db_file):
-        os.remove(db_file)
-        logger.info(f"Removed existing database: {db_file}")
-    
     # Create database
     db = SimpleTruckingDB(db_file)
     
     try:
         # Connect and setup
         db.connect()
-        db.create_schema()
+        
+        # Check if schedule table exists to determine if we need to create or migrate
+        try:
+            cursor = db.conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='schedule'")
+            table_exists = cursor.fetchone() is not None
+            
+            if table_exists:
+                logger.info(f"Existing schedule table found, migrating schema...")
+                db.migrate_schema()
+            else:
+                logger.info(f"Creating new database schema...")
+                db.create_schema()
+        except Exception as e:
+            logger.info(f"Creating new database schema...")
+            db.create_schema()
         
         # Load data
         logger.info("Starting data import...")

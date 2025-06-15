@@ -206,11 +206,12 @@ def get_trips():
                 MIN(facility) as start_location,
                 MAX(facility) as end_location,
                 COUNT(*) as stop_count,
-                vehicle_type,
-                vehicle_id
+                MAX(vehicle_type) as vehicle_type,
+                MAX(vehicle_id) as vehicle_id,
+                MAX(contract_hcr_number) as contract_hcr_number
             FROM schedule 
-            GROUP BY trip_id
-            ORDER BY trip_id
+            GROUP BY trip_id, contract_hcr_number
+            ORDER BY contract_hcr_number, trip_id
         """)
         
         return jsonify({'trips': trips})

@@ -3,6 +3,116 @@
 <head>
     <title>Trip Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-select[multiple] {
+            height: auto;
+            min-height: 38px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .form-select[multiple] option {
+            padding: 6px 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-select[multiple] option:hover {
+            background-color: #e3f2fd;
+        }
+        .form-select[multiple] option:checked {
+            background-color: #2196f3;
+            color: white;
+        }
+        .filter-badge {
+            font-size: 0.8em;
+        }
+        #filterSummary {
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .multi-select-container {
+            position: relative;
+        }
+        .multi-select-hint {
+            font-size: 0.75em;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        .filter-section-collapsed {
+            transition: all 0.3s ease;
+        }
+        .selected-count {
+            position: absolute;
+            top: -8px;
+            right: 8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 0.7em;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        /* Custom Multi-Select with Checkboxes */
+        .custom-multi-select {
+            position: relative;
+            width: 100%;
+        }
+        .multi-select-button {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .multi-select-button:hover {
+            border-color: #86b7fe;
+        }
+        .multi-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ced4da;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .multi-select-option {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .multi-select-option:hover {
+            background-color: #f8f9fa;
+        }
+        .multi-select-option input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .multi-select-option:last-child {
+            border-bottom: none;
+        }
+        .dropdown-arrow {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .multi-select-placeholder {
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark">
@@ -36,25 +146,150 @@
             </div>
         </div>
 
+        <!-- Advanced Filtering Section -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Trip Filters</h5>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm" id="clearFiltersBtn">Clear All</button>
+                    <button class="btn btn-outline-primary btn-sm" id="toggleFiltersBtn">Hide Filters</button>
+                </div>
+            </div>
+            <div class="card-body" id="filtersSection">
+                <div class="row g-3">
+                    <!-- Contract ID Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Contract ID</label>
+                        <div class="multi-select-container">
+                            <div class="custom-multi-select">
+                                <div class="multi-select-button" onclick="toggleDropdown('contract')">
+                                    <span id="contractDisplay" class="multi-select-placeholder">All Contracts</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div id="contractDropdown" class="multi-select-dropdown">
+                                    <!-- Options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <span class="selected-count" id="contractCount" style="display: none;">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Trip ID Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Trip ID Range</label>
+                        <div class="d-flex gap-1">
+                            <input type="number" class="form-control" id="tripIdMin" placeholder="Min">
+                            <input type="number" class="form-control" id="tripIdMax" placeholder="Max">
+                        </div>
+                    </div>
+                    
+                    <!-- Time Range Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Start Time Range</label>
+                        <div class="d-flex gap-1">
+                            <input type="time" class="form-control" id="startTimeMin">
+                            <input type="time" class="form-control" id="startTimeMax">
+                        </div>
+                    </div>
+                    
+                    <!-- End Time Range Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">End Time Range</label>
+                        <div class="d-flex gap-1">
+                            <input type="time" class="form-control" id="endTimeMin">
+                            <input type="time" class="form-control" id="endTimeMax">
+                        </div>
+                    </div>
+                    
+                    <!-- Location Filters -->
+                    <div class="col-md-3">
+                        <label class="form-label">Start Location</label>
+                        <div class="multi-select-container">
+                            <div class="custom-multi-select">
+                                <div class="multi-select-button" onclick="toggleDropdown('startLocation')">
+                                    <span id="startLocationDisplay" class="multi-select-placeholder">All Locations</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div id="startLocationDropdown" class="multi-select-dropdown">
+                                    <!-- Options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <span class="selected-count" id="startLocationCount" style="display: none;">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">End Location</label>
+                        <div class="multi-select-container">
+                            <div class="custom-multi-select">
+                                <div class="multi-select-button" onclick="toggleDropdown('endLocation')">
+                                    <span id="endLocationDisplay" class="multi-select-placeholder">All Locations</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div id="endLocationDropdown" class="multi-select-dropdown">
+                                    <!-- Options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <span class="selected-count" id="endLocationCount" style="display: none;">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Stops Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Number of Stops</label>
+                        <div class="d-flex gap-1">
+                            <input type="number" class="form-control" id="stopsMin" placeholder="Min" min="1">
+                            <input type="number" class="form-control" id="stopsMax" placeholder="Max" min="1">
+                        </div>
+                    </div>
+                    
+                    <!-- Frequency Code Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Freq Code</label>
+                        <div class="multi-select-container">
+                            <div class="custom-multi-select">
+                                <div class="multi-select-button" onclick="toggleDropdown('freqCode')">
+                                    <span id="freqCodeDisplay" class="multi-select-placeholder">All Codes</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div id="freqCodeDropdown" class="multi-select-dropdown">
+                                    <!-- Options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <span class="selected-count" id="freqCodeCount" style="display: none;">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter Summary -->
+                <div class="mt-3">
+                    <small class="text-muted" id="filterSummary">No filters applied</small>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>Available Trips</h5>
+                <span class="badge bg-primary" id="tripCount">0 trips</span>
             </div>
             <div class="card-body">
                 <table class="table">
                     <thead>
                         <tr>
                             <th><input type="checkbox" id="selectAll"></th>
+                            <th>Contract ID</th>
                             <th>Trip ID</th>
                             <th>Start Time</th>
                             <th>End Time</th>
                             <th>Start Location</th>
                             <th>End Location</th>
                             <th>Stops</th>
+                            <th>Freq Code</th>
                         </tr>
                     </thead>
                     <tbody id="tripsTable">
-                        <tr><td colspan="7">Loading...</td></tr>
+                        <tr><td colspan="9">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -65,11 +300,48 @@
 
     <script>
         let selectedTripIds = [];
+        let allTrips = [];
+        let filteredTrips = [];
+        let filterSelections = {
+            contract: [],
+            startLocation: [],
+            endLocation: [],
+            freqCode: []
+        };
 
         document.addEventListener('DOMContentLoaded', function() {
             loadTrips();
-            document.getElementById('createShiftBtn').addEventListener('click', createShift);
+            setupEventListeners();
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.custom-multi-select')) {
+                    closeAllDropdowns();
+                }
+            });
         });
+
+        function setupEventListeners() {
+            document.getElementById('createShiftBtn').addEventListener('click', createShift);
+            document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
+            document.getElementById('toggleFiltersBtn').addEventListener('click', toggleFilters);
+            
+            ['tripIdMin', 'tripIdMax', 'startTimeMin', 'startTimeMax', 'endTimeMin', 'endTimeMax', 'stopsMin', 'stopsMax'].forEach(id => {
+                document.getElementById(id).addEventListener('input', debounce(applyFilters, 300));
+            });
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
         async function loadTrips() {
             try {
@@ -77,29 +349,291 @@
                 const data = await response.json();
                 
                 if (response.ok && data.trips) {
-                    renderTrips(data.trips);
+                    allTrips = data.trips;
+                    filteredTrips = [...allTrips];
+                    populateFilterOptions();
+                    renderTrips(filteredTrips);
+                    updateTripCount();
                 } else {
                     document.getElementById('tripsTable').innerHTML = 
-                        '<tr><td colspan="7">No trips found. Upload a PDF first.</td></tr>';
+                        '<tr><td colspan="9">No trips found. Upload a PDF first.</td></tr>';
+                    document.getElementById('tripCount').textContent = '0 trips';
                 }
             } catch (error) {
                 document.getElementById('tripsTable').innerHTML = 
-                    '<tr><td colspan="7">Error loading trips</td></tr>';
+                    '<tr><td colspan="9">Error loading trips</td></tr>';
+                document.getElementById('tripCount').textContent = 'Error';
             }
         }
 
+        function populateFilterOptions() {
+            // Contract IDs
+            const contracts = [...new Set(allTrips.map(t => t.contract_hcr_number).filter(Boolean))].sort();
+            populateDropdown('contract', contracts);
+            
+            // Locations
+            const startLocs = [...new Set(allTrips.map(t => t.start_location).filter(Boolean))].sort();
+            const endLocs = [...new Set(allTrips.map(t => t.end_location).filter(Boolean))].sort();
+            populateDropdown('startLocation', startLocs);
+            populateDropdown('endLocation', endLocs);
+            
+            // Frequency codes - include N/A option and sort with numbers first
+            const freqCodes = [...new Set(allTrips.map(t => t.vehicle_id).filter(Boolean))]
+                .sort((a, b) => {
+                    const aIsNum = /^\d/.test(a);
+                    const bIsNum = /^\d/.test(b);
+                    if (aIsNum && !bIsNum) return -1;
+                    if (!aIsNum && bIsNum) return 1;
+                    return a.localeCompare(b, undefined, { numeric: true });
+                });
+            freqCodes.push('N/A');
+            populateDropdown('freqCode', freqCodes);
+            
+            // Initialize all displays
+            updateAllDisplays();
+        }
+
+        function populateDropdown(filterId, options) {
+            const dropdown = document.getElementById(filterId + 'Dropdown');
+            dropdown.innerHTML = '';
+            
+            options.forEach(option => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'multi-select-option';
+                optionDiv.innerHTML = `
+                    <input type="checkbox" id="${filterId}_${option}" value="${option}" onchange="handleCheckboxChange('${filterId}', '${option}')">
+                    <label for="${filterId}_${option}">${option}</label>
+                `;
+                dropdown.appendChild(optionDiv);
+            });
+        }
+
+        function toggleDropdown(filterId) {
+            const dropdown = document.getElementById(filterId + 'Dropdown');
+            const arrow = dropdown.previousElementSibling.querySelector('.dropdown-arrow');
+            
+            // Close all other dropdowns first
+            closeAllDropdowns();
+            
+            // Toggle this dropdown
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+                arrow.textContent = '▼';
+            } else {
+                dropdown.style.display = 'block';
+                arrow.textContent = '▲';
+            }
+        }
+
+        function closeAllDropdowns() {
+            ['contract', 'startLocation', 'endLocation', 'freqCode'].forEach(filterId => {
+                const dropdown = document.getElementById(filterId + 'Dropdown');
+                const arrow = dropdown.previousElementSibling.querySelector('.dropdown-arrow');
+                dropdown.style.display = 'none';
+                arrow.textContent = '▼';
+            });
+        }
+
+        function handleCheckboxChange(filterId, value) {
+            const checkbox = document.getElementById(`${filterId}_${value}`);
+            
+            if (checkbox.checked) {
+                if (!filterSelections[filterId].includes(value)) {
+                    filterSelections[filterId].push(value);
+                }
+            } else {
+                filterSelections[filterId] = filterSelections[filterId].filter(v => v !== value);
+            }
+            
+            updateDisplay(filterId);
+            updateSelectionCount(filterId);
+            applyFilters();
+        }
+
+        function updateDisplay(filterId) {
+            const displayElement = document.getElementById(filterId + 'Display');
+            const selections = filterSelections[filterId];
+            
+            let defaultText = 'All Contracts';
+            if (filterId === 'startLocation') defaultText = 'All Locations';
+            if (filterId === 'endLocation') defaultText = 'All Locations'; 
+            if (filterId === 'freqCode') defaultText = 'All Codes';
+            
+            if (selections.length === 0) {
+                displayElement.textContent = defaultText;
+                displayElement.className = 'multi-select-placeholder';
+            } else if (selections.length === 1) {
+                displayElement.textContent = selections[0];
+                displayElement.className = '';
+            } else {
+                displayElement.textContent = `${selections.length} selected`;
+                displayElement.className = '';
+            }
+        }
+
+        function updateAllDisplays() {
+            ['contract', 'startLocation', 'endLocation', 'freqCode'].forEach(filterId => {
+                updateDisplay(filterId);
+                updateSelectionCount(filterId);
+            });
+        }
+
+        function applyFilters() {
+            filteredTrips = allTrips.filter(trip => {
+                // Contract filter
+                if (filterSelections.contract.length > 0 && !filterSelections.contract.includes(trip.contract_hcr_number)) return false;
+                
+                // Trip ID range
+                const tripIdMin = parseInt(document.getElementById('tripIdMin').value);
+                const tripIdMax = parseInt(document.getElementById('tripIdMax').value);
+                if (tripIdMin && trip.trip_id < tripIdMin) return false;
+                if (tripIdMax && trip.trip_id > tripIdMax) return false;
+                
+                // Start time range
+                const startTimeMin = document.getElementById('startTimeMin').value;
+                const startTimeMax = document.getElementById('startTimeMax').value;
+                if (startTimeMin && trip.start_time && trip.start_time.substring(0, 5) < startTimeMin) return false;
+                if (startTimeMax && trip.start_time && trip.start_time.substring(0, 5) > startTimeMax) return false;
+                
+                // End time range
+                const endTimeMin = document.getElementById('endTimeMin').value;
+                const endTimeMax = document.getElementById('endTimeMax').value;
+                if (endTimeMin && trip.end_time && trip.end_time.substring(0, 5) < endTimeMin) return false;
+                if (endTimeMax && trip.end_time && trip.end_time.substring(0, 5) > endTimeMax) return false;
+                
+                // Location filters
+                if (filterSelections.startLocation.length > 0 && !filterSelections.startLocation.includes(trip.start_location)) return false;
+                if (filterSelections.endLocation.length > 0 && !filterSelections.endLocation.includes(trip.end_location)) return false;
+                
+                // Stops range
+                const stopsMin = parseInt(document.getElementById('stopsMin').value);
+                const stopsMax = parseInt(document.getElementById('stopsMax').value);
+                if (stopsMin && trip.stop_count < stopsMin) return false;
+                if (stopsMax && trip.stop_count > stopsMax) return false;
+                
+                // Frequency code filter
+                if (filterSelections.freqCode.length > 0) {
+                    const tripFreq = trip.vehicle_id || 'N/A';
+                    if (!filterSelections.freqCode.includes(tripFreq)) return false;
+                }
+                
+                return true;
+            });
+            
+            renderTrips(filteredTrips);
+            updateTripCount();
+            updateFilterSummary();
+        }
+
         function renderTrips(trips) {
-            document.getElementById('tripsTable').innerHTML = trips.map(trip => `
+            const tbody = document.getElementById('tripsTable');
+            if (trips.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No trips match the current filters</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = trips.map(trip => `
                 <tr>
-                    <td><input type="checkbox" value="${trip.trip_id}" onchange="toggleTrip(${trip.trip_id})"></td>
+                    <td><input type="checkbox" value="${trip.trip_id}" onchange="toggleTrip(${trip.trip_id})" ${selectedTripIds.includes(trip.trip_id) ? 'checked' : ''}></td>
+                    <td>${trip.contract_hcr_number || 'N/A'}</td>
                     <td>${trip.trip_id}</td>
                     <td>${trip.start_time || 'N/A'}</td>
                     <td>${trip.end_time || 'N/A'}</td>
                     <td>${trip.start_location || 'N/A'}</td>
                     <td>${trip.end_location || 'N/A'}</td>
                     <td>${trip.stop_count}</td>
+                    <td>${trip.vehicle_id || 'N/A'}</td>
                 </tr>
             `).join('');
+        }
+
+        function updateTripCount() {
+            document.getElementById('tripCount').textContent = `${filteredTrips.length} trips`;
+        }
+
+        function updateFilterSummary() {
+            const activeFilters = [];
+            
+            if (filterSelections.contract.length > 0) activeFilters.push(`Contracts: ${filterSelections.contract.join(', ')}`);
+            
+            const tripIdMin = document.getElementById('tripIdMin').value;
+            const tripIdMax = document.getElementById('tripIdMax').value;
+            if (tripIdMin || tripIdMax) {
+                const range = `${tripIdMin || '∞'} - ${tripIdMax || '∞'}`;
+                activeFilters.push(`Trip ID: ${range}`);
+            }
+            
+            if (filterSelections.startLocation.length > 0) activeFilters.push(`Start: ${filterSelections.startLocation.length} location(s)`);
+            if (filterSelections.endLocation.length > 0) activeFilters.push(`End: ${filterSelections.endLocation.length} location(s)`);
+            if (filterSelections.freqCode.length > 0) activeFilters.push(`Freq: ${filterSelections.freqCode.join(', ')}`);
+            
+            const stopsMin = document.getElementById('stopsMin').value;
+            const stopsMax = document.getElementById('stopsMax').value;
+            if (stopsMin || stopsMax) {
+                const range = `${stopsMin || '1'} - ${stopsMax || '∞'}`;
+                activeFilters.push(`Stops: ${range}`);
+            }
+            
+            document.getElementById('filterSummary').textContent = 
+                activeFilters.length > 0 ? `Active filters: ${activeFilters.join(' | ')}` : 'No filters applied';
+        }
+
+        function updateSelectionCount(filterId) {
+            const countElement = document.getElementById(filterId + 'Count');
+            const selectedCount = filterSelections[filterId].length;
+            
+            if (selectedCount > 0) {
+                countElement.textContent = selectedCount;
+                countElement.style.display = 'block';
+            } else {
+                countElement.style.display = 'none';
+            }
+        }
+
+        function clearAllFilters() {
+            // Clear all filter selections
+            filterSelections = {
+                contract: [],
+                startLocation: [],
+                endLocation: [],
+                freqCode: []
+            };
+            
+            // Uncheck all checkboxes
+            document.querySelectorAll('.multi-select-dropdown input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            
+            // Clear range inputs
+            ['tripIdMin', 'tripIdMax', 'startTimeMin', 'startTimeMax', 'endTimeMin', 'endTimeMax', 'stopsMin', 'stopsMax'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            
+            // Update displays and counts
+            updateAllDisplays();
+            
+            // Reset filtered trips
+            filteredTrips = [...allTrips];
+            renderTrips(filteredTrips);
+            updateTripCount();
+            updateFilterSummary();
+        }
+
+        function toggleFilters() {
+            const section = document.getElementById('filtersSection');
+            const button = document.getElementById('toggleFiltersBtn');
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                button.textContent = 'Hide Filters';
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-outline-secondary');
+            } else {
+                section.style.display = 'none';
+                button.textContent = 'Show Filters';
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-outline-primary');
+            }
         }
 
         function toggleTrip(tripId) {
