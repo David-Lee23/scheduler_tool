@@ -210,3 +210,53 @@ The system is production-ready for trucking companies to optimize their driver s
 ---
 
 *Built for trucking companies to streamline driver scheduling and route optimization through accurate PDF data extraction and intuitive shift management.*
+
+## Data Security & Privacy
+
+⚠️ **IMPORTANT**: This repository does NOT contain any company data. All sensitive files are excluded via `.gitignore`:
+
+- PDF files (`*.pdf`)
+- Database files (`*.db`, `*.sqlite`)
+- CSV files (`*.csv`) 
+- Upload directories (`uploads/`, `pdfs/`)
+
+### What's NOT included in this repo:
+- Company schedule PDFs
+- SQLite databases with trip data
+- Extracted CSV files
+- Any uploaded files
+
+### To use with your own data:
+1. Upload your PDF schedules via the web interface
+2. The system will create a local SQLite database
+3. All data stays on your local machine
+4. Never commit data files to version control
+
+## File Structure
+
+```
+schedule_tool/
+├── app.py                              # Main Flask application
+├── trucking_schedule_extractor.py      # PDF processing
+├── csv_to_sqlite.py                   # Database import
+├── templates/                          # HTML templates
+├── requirements.txt                    # Python dependencies
+├── uploads/                           # PDF uploads (not in repo)
+├── pdfs/                              # PDF storage (not in repo)
+└── trucking_schedule.db               # SQLite database (not in repo)
+```
+
+## Usage
+
+1. **Upload PDF**: Go to `/upload` and upload your trucking schedule PDF
+2. **View Trips**: Go to `/trips` to see extracted trip data
+3. **Create Shifts**: Select trips and create driver shifts
+4. **Manage**: Use the dashboard to overview your data
+
+## Contributing
+
+This is an open-source project. Feel free to submit issues and pull requests.
+
+## License
+
+[Add your license here]

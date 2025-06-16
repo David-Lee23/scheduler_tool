@@ -30,7 +30,29 @@ build/
 # .env files
 .env # Ignore all .env files
 
-# Uploads
-uploads/*
-!uploads/.gitkeep
+# Data files - NEVER commit company data
+uploads/
+pdfs/
+*.db
+*.sqlite
+*.sqlite3
+
+# CSV files that might contain sensitive data
+*.csv
+
+# PDF files that might contain sensitive schedules
+*.pdf
+
+# Temporary files
+temp/
+tmp/
+
+# Any config files that might contain sensitive info
+config.json
+config.yaml
+config.yml
+
+# Backup files
+*.bak
+*.backup
 
