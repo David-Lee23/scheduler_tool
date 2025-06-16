@@ -9,14 +9,19 @@ A comprehensive web application for processing trucking schedule PDFs and buildi
    pip install -r requirements.txt
    ```
 
-2. **Start the application**:
+2. **Set environment variables** (optional):
+   ```bash
+   export SECRET_KEY="your-production-secret-key-here"
+   ```
+
+3. **Start the application**:
    ```bash
    python run_mvp.py
    ```
 
-3. **Open your browser** to http://localhost:5000
+4. **Open your browser** to http://localhost:5000
 
-4. **Upload your first PDF** and start building shifts!
+5. **Upload your first PDF** and start building shifts!
 
 ## ✨ Features
 

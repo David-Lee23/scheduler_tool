@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = 'trucking_schedule_mvp_2024'
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
 CORS(app)
 
 # Configuration
