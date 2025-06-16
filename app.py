@@ -220,6 +220,60 @@ def get_trips():
         logger.error(f"Get trips error: {e}")
         return jsonify({'trips': []})
 
+@app.route('/api/trips-with-status')
+def get_trips_with_status():
+    """Get all trips with their shift assignment status"""
+    try:
+        # First get all trips
+        trips = db.execute_query("""
+            SELECT 
+                trip_id,
+                MIN(arrive_time) as start_time,
+                MAX(depart_time) as end_time,
+                MIN(facility) as start_location,
+                MAX(facility) as end_location,
+                COUNT(*) as stop_count,
+                MAX(vehicle_type) as vehicle_type,
+                MAX(vehicle_id) as vehicle_id,
+                MAX(contract_hcr_number) as contract_hcr_number
+            FROM schedule 
+            GROUP BY trip_id, contract_hcr_number
+            ORDER BY contract_hcr_number, trip_id
+        """)
+        
+        # Get all trips that are assigned to shifts
+        db.ensure_shifts_table()
+        assigned_shifts = db.execute_query("""
+            SELECT trip_ids, shift_name, id as shift_id
+            FROM shifts
+        """)
+        
+        # Build a map of trip_id -> shift info
+        trip_to_shift = {}
+        for shift in assigned_shifts:
+            trip_ids = [int(x) for x in shift['trip_ids'].split(',')]
+            for trip_id in trip_ids:
+                trip_to_shift[trip_id] = {
+                    'shift_id': shift['shift_id'],
+                    'shift_name': shift['shift_name']
+                }
+        
+        # Add shift status to each trip
+        for trip in trips:
+            trip_id = trip['trip_id']
+            if trip_id in trip_to_shift:
+                trip['shift_status'] = 'in-use'
+                trip['shift_info'] = trip_to_shift[trip_id]
+            else:
+                trip['shift_status'] = 'available'
+                trip['shift_info'] = None
+        
+        return jsonify({'trips': trips})
+        
+    except Exception as e:
+        logger.error(f"Get trips with status error: {e}")
+        return jsonify({'trips': []})
+
 @app.route('/api/trips/<int:trip_id>')
 def get_trip_details(trip_id):
     """Get detailed trip information"""
@@ -241,7 +295,7 @@ def get_trip_details(trip_id):
 
 @app.route('/api/shifts', methods=['GET'])
 def get_shifts():
-    """Get all created shifts"""
+    """Get all created shifts with trip details"""
     try:
         db.ensure_shifts_table()
         shifts = db.execute_query("""
@@ -251,9 +305,31 @@ def get_shifts():
             ORDER BY created_at DESC
         """)
         
-        # Parse trip_ids back to arrays
+        # Parse trip_ids and get trip details for each shift
         for shift in shifts:
-            shift['trip_ids'] = [int(x) for x in shift['trip_ids'].split(',')]
+            trip_ids = [int(x) for x in shift['trip_ids'].split(',')]
+            shift['trip_ids'] = trip_ids
+            
+            # Get contract IDs for each trip
+            if trip_ids:
+                placeholders = ','.join(['?' for _ in trip_ids])
+                trip_details = db.execute_query(f"""
+                    SELECT DISTINCT trip_id, contract_hcr_number
+                    FROM schedule 
+                    WHERE trip_id IN ({placeholders})
+                    ORDER BY trip_id
+                """, trip_ids)
+                
+                # Create a mapping of trip_id to contract_id
+                trip_contract_map = {trip['trip_id']: trip['contract_hcr_number'] for trip in trip_details}
+                
+                # Add trip details to shift
+                shift['trip_details'] = []
+                for trip_id in trip_ids:
+                    shift['trip_details'].append({
+                        'trip_id': trip_id,
+                        'contract_id': trip_contract_map.get(trip_id, 'N/A')
+                    })
         
         return jsonify({'shifts': shifts})
         

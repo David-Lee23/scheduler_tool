@@ -259,6 +259,16 @@
                             <span class="selected-count" id="freqCodeCount" style="display: none;">0</span>
                         </div>
                     </div>
+                    
+                    <!-- Shift Status Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Shift Status</label>
+                        <select class="form-select" id="shiftStatus">
+                            <option value="all">All Trips</option>
+                            <option value="available">Available (Not in Shift)</option>
+                            <option value="in-use">In-Use (Already in Shift)</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <!-- Filter Summary -->
@@ -286,6 +296,7 @@
                             <th>End Location</th>
                             <th>Stops</th>
                             <th>Freq Code</th>
+                            <th>Shift Status</th>
                         </tr>
                     </thead>
                     <tbody id="tripsTable">
@@ -325,6 +336,7 @@
             document.getElementById('createShiftBtn').addEventListener('click', createShift);
             document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
             document.getElementById('toggleFiltersBtn').addEventListener('click', toggleFilters);
+            document.getElementById('shiftStatus').addEventListener('change', applyFilters);
             
             ['tripIdMin', 'tripIdMax', 'startTimeMin', 'startTimeMax', 'endTimeMin', 'endTimeMax', 'stopsMin', 'stopsMax'].forEach(id => {
                 document.getElementById(id).addEventListener('input', debounce(applyFilters, 300));
@@ -345,7 +357,7 @@
 
         async function loadTrips() {
             try {
-                const response = await fetch('/api/trips');
+                const response = await fetch('/api/trips-with-status');
                 const data = await response.json();
                 
                 if (response.ok && data.trips) {
@@ -356,12 +368,12 @@
                     updateTripCount();
                 } else {
                     document.getElementById('tripsTable').innerHTML = 
-                        '<tr><td colspan="9">No trips found. Upload a PDF first.</td></tr>';
+                        '<tr><td colspan="10">No trips found. Upload a PDF first.</td></tr>';
                     document.getElementById('tripCount').textContent = '0 trips';
                 }
             } catch (error) {
                 document.getElementById('tripsTable').innerHTML = 
-                    '<tr><td colspan="9">Error loading trips</td></tr>';
+                    '<tr><td colspan="10">Error loading trips</td></tr>';
                 document.getElementById('tripCount').textContent = 'Error';
             }
         }
@@ -480,6 +492,10 @@
 
         function applyFilters() {
             filteredTrips = allTrips.filter(trip => {
+                // Shift status filter
+                const shiftStatus = document.getElementById('shiftStatus').value;
+                if (shiftStatus !== 'all' && trip.shift_status !== shiftStatus) return false;
+                
                 // Contract filter
                 if (filterSelections.contract.length > 0 && !filterSelections.contract.includes(trip.contract_hcr_number)) return false;
                 
@@ -528,23 +544,33 @@
         function renderTrips(trips) {
             const tbody = document.getElementById('tripsTable');
             if (trips.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No trips match the current filters</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No trips match the current filters</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = trips.map(trip => `
-                <tr>
-                    <td><input type="checkbox" value="${trip.trip_id}" onchange="toggleTrip(${trip.trip_id})" ${selectedTripIds.includes(trip.trip_id) ? 'checked' : ''}></td>
-                    <td>${trip.contract_hcr_number || 'N/A'}</td>
-                    <td>${trip.trip_id}</td>
-                    <td>${trip.start_time || 'N/A'}</td>
-                    <td>${trip.end_time || 'N/A'}</td>
-                    <td>${trip.start_location || 'N/A'}</td>
-                    <td>${trip.end_location || 'N/A'}</td>
-                    <td>${trip.stop_count}</td>
-                    <td>${trip.vehicle_id || 'N/A'}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = trips.map(trip => {
+                let shiftStatusDisplay = '';
+                if (trip.shift_status === 'available') {
+                    shiftStatusDisplay = '<span class="badge bg-success">Available</span>';
+                } else if (trip.shift_status === 'in-use') {
+                    shiftStatusDisplay = `<span class="badge bg-warning text-dark" title="Shift: ${trip.shift_info.shift_name}">In-Use</span>`;
+                }
+                
+                return `
+                    <tr>
+                        <td><input type="checkbox" value="${trip.trip_id}" onchange="toggleTrip(${trip.trip_id})" ${selectedTripIds.includes(trip.trip_id) ? 'checked' : ''}></td>
+                        <td>${trip.contract_hcr_number || 'N/A'}</td>
+                        <td>${trip.trip_id}</td>
+                        <td>${trip.start_time || 'N/A'}</td>
+                        <td>${trip.end_time || 'N/A'}</td>
+                        <td>${trip.start_location || 'N/A'}</td>
+                        <td>${trip.end_location || 'N/A'}</td>
+                        <td>${trip.stop_count}</td>
+                        <td>${trip.vehicle_id || 'N/A'}</td>
+                        <td>${shiftStatusDisplay}</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function updateTripCount() {
@@ -553,6 +579,13 @@
 
         function updateFilterSummary() {
             const activeFilters = [];
+            
+            // Shift status filter
+            const shiftStatus = document.getElementById('shiftStatus').value;
+            if (shiftStatus !== 'all') {
+                const statusText = shiftStatus === 'available' ? 'Available trips only' : 'In-use trips only';
+                activeFilters.push(statusText);
+            }
             
             if (filterSelections.contract.length > 0) activeFilters.push(`Contracts: ${filterSelections.contract.join(', ')}`);
             
@@ -608,6 +641,9 @@
             ['tripIdMin', 'tripIdMax', 'startTimeMin', 'startTimeMax', 'endTimeMin', 'endTimeMax', 'stopsMin', 'stopsMax'].forEach(id => {
                 document.getElementById(id).value = '';
             });
+            
+            // Reset shift status filter
+            document.getElementById('shiftStatus').value = 'all';
             
             // Update displays and counts
             updateAllDisplays();
